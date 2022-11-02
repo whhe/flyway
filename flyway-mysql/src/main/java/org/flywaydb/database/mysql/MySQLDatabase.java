@@ -43,15 +43,15 @@ public class MySQLDatabase extends Database<MySQLConnection> {
     /**
      * Whether this is a Percona XtraDB Cluster in strict mode.
      */
-    private final boolean pxcStrict;
+    protected boolean pxcStrict;
     /**
      * Whether this database is enforcing GTID consistency.
      */
-    private final boolean gtidConsistencyEnforced;
+    protected boolean gtidConsistencyEnforced;
     /**
      * Whether the event scheduler table is queryable.
      */
-    final boolean eventSchedulerQueryable;
+    protected boolean eventSchedulerQueryable;
 
     public MySQLDatabase(Configuration configuration, JdbcConnectionFactory jdbcConnectionFactory, StatementInterceptor statementInterceptor) {
         super(configuration, jdbcConnectionFactory, statementInterceptor);
@@ -242,9 +242,14 @@ public class MySQLDatabase extends Database<MySQLConnection> {
 
     @Override
     public final void ensureSupported() {
-        if (databaseType.getName().equals("TiDB")) {
+        if ("TiDB".equals(databaseType.getName())) {
             ensureDatabaseIsRecentEnough("5.0");
             recommendFlywayUpgradeIfNecessary("5.0");
+            return;
+        }
+        if ("OceanBase".equals(databaseType.getName())) {
+            ensureDatabaseIsRecentEnough("2.2");
+            recommendFlywayUpgradeIfNecessary("3.2");
             return;
         }
         ensureDatabaseIsRecentEnough("5.1");
