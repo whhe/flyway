@@ -22,6 +22,9 @@ import org.flywaydb.core.internal.jdbc.StatementInterceptor;
 import org.flywaydb.core.internal.util.ClassUtils;
 import org.flywaydb.database.mysql.MySQLDatabaseType;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 public class OceanBaseDatabaseType extends MySQLDatabaseType {
 
     public static final String JDBC_URL_PREFIX = "jdbc:oceanbase:";
@@ -36,7 +39,21 @@ public class OceanBaseDatabaseType extends MySQLDatabaseType {
     @Override
     public int getPriority() {
         // OceanBase needs to be checked in advance of MySql
-        return 1;
+        return 2;
+    }
+
+    @Override
+    public boolean handlesDatabaseProductNameAndVersion(String databaseProductName, String databaseProductVersion, Connection connection) {
+        if (!databaseProductName.contains("MySQL") && !databaseProductName.contains("OceanBase")) {
+            return false;
+        }
+        String versionComment;
+        try {
+            versionComment = OceanBaseJdbcUtils.getVersionComment(connection);
+        } catch (SQLException e) {
+            return false;
+        }
+        return versionComment != null && versionComment.contains("OceanBase");
     }
 
     @Override

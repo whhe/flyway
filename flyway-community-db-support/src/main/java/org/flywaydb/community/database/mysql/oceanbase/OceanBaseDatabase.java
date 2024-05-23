@@ -15,6 +15,8 @@
  */
 package org.flywaydb.community.database.mysql.oceanbase;
 
+import org.flywaydb.core.api.FlywayException;
+import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.configuration.Configuration;
 import org.flywaydb.core.internal.jdbc.JdbcConnectionFactory;
 import org.flywaydb.core.internal.jdbc.StatementInterceptor;
@@ -22,6 +24,7 @@ import org.flywaydb.database.mysql.MySQLConnection;
 import org.flywaydb.database.mysql.MySQLDatabase;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 public class OceanBaseDatabase extends MySQLDatabase {
 
@@ -38,5 +41,16 @@ public class OceanBaseDatabase extends MySQLDatabase {
     @Override
     protected boolean isCreateTableAsSelectAllowed() {
         return true;
+    }
+
+    @Override
+    protected MigrationVersion determineVersion() {
+        String versionNumber;
+        try {
+            versionNumber = OceanBaseJdbcUtils.getVersionNumber(rawMainJdbcConnection);
+        } catch (SQLException e) {
+            throw new FlywayException("Failed to get version number", e);
+        }
+        return MigrationVersion.fromVersion(versionNumber);
     }
 }
